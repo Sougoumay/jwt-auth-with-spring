@@ -30,41 +30,42 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws ServletException, IOException {
         final String header = httpServletRequest.getHeader("Authorization");
         String userName = null;
+        String jwtToken = null;
+        System.out.println(header != null);
+        System.out.println(header);
         if (header != null && header.startsWith("Bearer ")) {
-            String jwtToken = header.substring(7);
+            jwtToken = header.substring(7);
 
             try {
                 userName = util.getUserNameFromToken(jwtToken);
-
-
-                if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = service.loadUserByUsername(userName);
-                    if (util.validateToken(jwtToken, userDetails)) {
-                        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails,
-                                null,
-                                userDetails.getAuthorities());
-
-                        usernamePasswordAuthenticationToken
-                                .setDetails(new WebAuthenticationDetailsSource().buildDetails(httpServletRequest));
-
-                        SecurityContextHolder
-                                .getContext()
-                                .setAuthentication(usernamePasswordAuthenticationToken);
-
-                    }
-
-                }
-
-                filterChain.doFilter(httpServletRequest, httpServletResponse);
-
             } catch (IllegalArgumentException e) {
                 System.out.println("Unable to get JWT Token");
             } catch (ExpiredJwtException e) {
                 System.out.println("JWT Token is expired");
             }
         } else {
-            System.out.println("JWT Token does not start with Baerer");
+            System.out.println("JWT Token does not start with Bearer");
         }
 
+
+        if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = service.loadUserByUsername(userName);
+            if (util.validateToken(jwtToken, userDetails)) {
+                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails,
+                        null,
+                        userDetails.getAuthorities());
+
+                usernamePasswordAuthenticationToken
+                        .setDetails(new WebAuthenticationDetailsSource().buildDetails(httpServletRequest));
+
+                SecurityContextHolder
+                        .getContext()
+                        .setAuthentication(usernamePasswordAuthenticationToken);
+
+            }
+
+        }
+
+        filterChain.doFilter(httpServletRequest, httpServletResponse);
     }
 }

@@ -5,6 +5,7 @@ import hamid.sougouma.jwtauthwithspring.entity.User;
 import hamid.sougouma.jwtauthwithspring.repositories.RoleRepository;
 import hamid.sougouma.jwtauthwithspring.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -18,7 +19,11 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
-    RoleRepository roleRepository;
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
 
     public User register(User user) {
         return userRepository.save(user);
@@ -50,7 +55,7 @@ public class UserService {
         user.setUserName(userName);
         user.setFirstName(firstName);
         user.setLastName(lastName);
-        user.setPassword(password);
+        user.setPassword(passwordEncoder.encode(password));
 
         Set<Role> roles = new HashSet<>();
         roles.add(role);
